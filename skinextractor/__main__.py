@@ -1,3 +1,4 @@
+import colorsys
 import json
 import sys
 import logging
@@ -86,20 +87,16 @@ for i, paintkit in enumerate(items["items_game"]["paint_kits"].values()):
             # paintkit["weapons"][weapon]["palette"] = ct.get_palette(3)
 
             # sys palette
-            try:
-                paintkit["weapons"][weapon]["palette"] = list()
-                for color_id in range(0, 4):
-                    color_name = f"color{color_id}"
-
-                    # print(f"{color_name} -> {paintkit}")
-                    r, g, b = paintkit[color_name].strip().split(" ")
-                    paintkit["weapons"][weapon]["palette"].append(
-                        [int(r), int(g), int(b)]
-                    )
-            except:
-                # fallback
-                ct = ColorThief(output.absolute())
-                paintkit["weapons"][weapon]["palette"] = ct.get_palette(color_count=3, quality=1)
+            ct = ColorThief(output.absolute())
+            # rgb
+            paintkit["weapons"][weapon]["palette_rgb"] = ct.get_palette(color_count=3, quality=1)
+            # hsv
+            paintkit["weapons"][weapon]["palette_hsv"] = list()
+            for r, g, b in paintkit["weapons"][weapon]["palette_rgb"]:
+                h, s, v = colorsys.rgb_to_hsv(r / 255, g / 255, b / 255)
+                paintkit["weapons"][weapon]["palette_hsv"].append(
+                    (h * 360, s * 100, v * 100)
+                )
 
     logging.info(f"Parsed {i} out of {total} paintkits")
     # print(json.dumps(paintkit, indent=4, ensure_ascii=False))
