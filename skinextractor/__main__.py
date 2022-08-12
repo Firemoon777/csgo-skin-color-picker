@@ -45,7 +45,8 @@ lang_native = cfgparser.load(lang_native_file, encoding="utf16")
 
 # print(json.dumps(list(items["items_game"]["rarities"].items()), indent=4))
 
-for paintkit in items["items_game"]["paint_kits"].values():
+total = len(items["items_game"]["paint_kits"].keys())
+for i, paintkit in enumerate(items["items_game"]["paint_kits"].values()):
     name = paintkit["name"].lower()
 
     # Append l18n name
@@ -98,8 +99,9 @@ for paintkit in items["items_game"]["paint_kits"].values():
             except:
                 # fallback
                 ct = ColorThief(output.absolute())
-                paintkit["weapons"][weapon]["palette"] = ct.get_palette(3)
+                paintkit["weapons"][weapon]["palette"] = ct.get_palette(color_count=3, quality=1)
 
+    logging.info(f"Parsed {i} out of {total} paintkits")
     # print(json.dumps(paintkit, indent=4, ensure_ascii=False))
 
 

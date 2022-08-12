@@ -99,14 +99,20 @@
 
                         <div class="card-body">
                             <p class="card-text">{{pk["rarity"]}} | {{pk["description_tag_native"]}}</p>
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <div class="btn-group">
+                                    {% for r, g, b in pk["weapons"][weapon]["palette"] %}
+                                    <button type="button" class="btn btn-sm btn-outline-secondary" style="background-color: rgb({{r}}, {{g}}, {{b}})">&#8207;</button>
+                                    {% endfor %}
+                                </div>
+                            </div>
                             <div class="d-flex justify-content-between align-items-center">
                                 <div class="btn-group">
                                     <a href="https://steamcommunity.com/market/search?appid=730&q={{pk["description_tag_native"]}}&category_730_Weapon%5B%5D=tag_weapon_{{weapon}}"
                                     target=”_blank”>
-                                    <button type="button" class="btn btn-sm btn-outline-secondary">Торговая площадка
-                                    </button>
+                                        <button type="button" class="btn btn-sm btn-outline-secondary">Торговая площадка</button>
                                     </a>
-                                    <!--                  <button type="button" class="btn btn-sm btn-outline-secondary">Edit</button>-->
+                                    <button type="button" class="btn btn-sm btn-outline-secondary">Похожие</button>
                                 </div>
                                 <small class="text-muted">{{pk["weapons"][weapon]["delta"]}}</small>
                             </div>
