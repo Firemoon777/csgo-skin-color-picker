@@ -1,6 +1,7 @@
 import io
 import logging
 import os
+import tempfile
 from pathlib import Path
 from typing import Tuple, List
 
@@ -23,13 +24,14 @@ def assembly_texture(pk: dict, vpk: Path) -> List[Tuple[int, int, int]]:
     vpk_path = f"materials/models/weapons/customization/paints/{style}/{pattern}.vtf"
     logging.debug(f"Extracting {vpk_path}")
 
-    hl = HLExtractor()
+    temp_dir = tempfile.TemporaryDirectory()
+    hl = HLExtractor(output_dir=Path(temp_dir.name))
     extracted = hl.extract_single(vpk, vpk_path)
 
     parser = vtf2img.Parser(extracted)
     image = parser.get_image()
 
-    if len(pk["color"]) != 0:
+    if len(pk["color"]) == 4 and pk["style"] != "gunsmith" and pk["style"] != "antiqued" :
         channels = image.split()
         channels = channels[:3]
 
@@ -42,6 +44,7 @@ def assembly_texture(pk: dict, vpk: Path) -> List[Tuple[int, int, int]]:
         texture = image
 
     os.remove(extracted.absolute())
+    temp_dir.cleanup()
 
     try:
         with io.BytesIO() as tmp:
@@ -52,10 +55,20 @@ def assembly_texture(pk: dict, vpk: Path) -> List[Tuple[int, int, int]]:
         # fallback for fully transparent skins
         alpha_composite = texture.convert("RGB")
 
-        with io.BytesIO() as tmp:
-            alpha_composite.save(tmp, "JPEG")
-            cf = colorthief.ColorThief(tmp)
-            return cf.get_palette(color_count=3, quality=1)
+        try:
+            with io.BytesIO() as tmp:
+                alpha_composite.save(tmp, "JPEG")
+                cf = colorthief.ColorThief(tmp)
+                return cf.get_palette(color_count=3, quality=1)
+        except Exception:
+            # fallback for fallback
+            print(f"{pk} triggered general fallback")
+            return [
+                (0, 0, 0),
+                (0, 0, 0),
+                (0, 0, 0),
+                (0, 0, 0),
+            ]
 
 
 def calculate_texture(pk: dict, vpk: Path) -> List[Tuple[int, int, int]]:

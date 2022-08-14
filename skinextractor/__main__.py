@@ -1,6 +1,8 @@
 import colorsys
 import logging
 
+from joblib import Parallel, delayed
+
 logging.basicConfig(format="%(asctime)s %(levelname)s: %(message)s", level=logging.INFO)
 
 import argparse
@@ -58,6 +60,25 @@ lang_en = cfgparser.load(lang_en_file, encoding="utf16")
 
 logging.info(f"Loading {args.locale} locale...")
 lang_native = cfgparser.load(lang_native_file, encoding="utf16")
+
+logging.info("Building rarity file")
+rarities = dict()
+
+for name, data in items["items_game"]["rarities"].items():
+    display_name_token = data["loc_key_weapon"].lower()
+    color_token = data["color"].lower()
+
+    try:
+        rarities[name] = {
+            "name": lang_native["lang"]["tokens"][display_name_token],
+            "color": items["items_game"]["colors"][color_token]["hex_color"]
+        }
+    except KeyError:
+        pass
+
+logging.info(f"Saving rarities to rarities.json")
+with open("rarities.json", "w+", encoding="utf-8") as f:
+    json.dump(rarities, f, indent=4, ensure_ascii=False)
 
 total = len(items["items_game"]["paint_kits"])
 logging.info(f"Found {total} paint kits")
@@ -128,15 +149,21 @@ for pk in paint_kits:
             "local": str(local)
         }
 
-# Calculate textures
-for i, pk in enumerate(paint_kits):
+
+def calculate_palette(i:int, pk: dict):
     logging.info(f"Done {i} out of {total} paint kits, now: {pk['id']}")
     if pk["style"] == "default":
-        continue
+        return
+
     # if pk["id"] != "sp_hazard_bravo":
     #     continue
 
-    pk["palette_rgb"] = calculate_texture(pk, materials_vpk)
+    try:
+        pk["palette_rgb"] = calculate_texture(pk, materials_vpk)
+    except Exception as e:
+        print(f"{pk['id']} raises exception: {e}")
+        return
+
     pk["palette_hsv"] = []
     for r, g, b in pk["palette_rgb"]:
         h, s, v = colorsys.rgb_to_hsv(r / 255, g / 255, b / 255)
@@ -145,7 +172,12 @@ for i, pk in enumerate(paint_kits):
         )
 
 
-# print(json.dumps(paint_kits, indent=4, ensure_ascii=False))
+# Calculate textures
+# Parallel(n_jobs=12)(delayed(calculate_palette)(i, pk) for i, pk in enumerate(paint_kits))
+for i, pk in enumerate(paint_kits):
+    calculate_palette(i, pk)
+
+logging.info(f"Saving paint kits to paint_kits.json...")
 
 with open("paint_kits.json", "w+", encoding="utf-8") as f:
     json.dump(paint_kits, f, indent=4, ensure_ascii=False)
