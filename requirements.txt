@@ -3,3 +3,4 @@ colorthief
 fastapi
 uvicorn
 jinja2
+vtf2img

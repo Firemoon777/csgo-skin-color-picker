@@ -1,10 +1,9 @@
+import logging
 import struct
 import subprocess
 from logging import getLogger
 from pathlib import Path
 from typing import Union, List
-
-logger = getLogger(__name__)
 
 
 class HLExtractor:
@@ -18,23 +17,23 @@ class HLExtractor:
                 arch = "x86"
             self._executable = f"third-party/HLExtract/{arch}/HLExtract.exe"
 
-        self._output = output_dir
+        self._output = output_dir or Path(".")
 
-        logger.debug(f"Initialized HLExtractor with executable {self._executable}, output dir {self._output}")
+        logging.debug(f"Initialized HLExtractor with executable {self._executable}, output dir {self._output}")
 
-    def extract(self, archive: Path, path: Union[str, List[str]]):
+    def extract(self, archive: Path, path: List[str]):
         assert archive.exists() is True
 
         cmd = [self._executable, "-p", archive]
-
-        if self._output:
-            cmd.extend(["-d", self._output])
-
-        if isinstance(path, str):
-            path = [path]
+        cmd.extend(["-d", self._output])
 
         for arg in path:
             cmd.extend(["-e", arg])
 
-        logger.debug(f"HLExtractor cmd: {cmd}")
-        subprocess.check_call(cmd)
+        logging.debug(f"HLExtractor cmd: {cmd}")
+        subprocess.check_call(cmd, stdout=subprocess.DEVNULL)
+
+        return [self._output / entry.split("/")[-1] for entry in path]
+
+    def extract_single(self, archive: Path, path: str):
+        return self.extract(archive, [path])[0]
