@@ -1,3 +1,4 @@
+import json
 import logging
 from pathlib import Path
 
@@ -14,6 +15,12 @@ def download_image(url: str, output: Path):
     if output.exists():
         return
 
+    logging.info(f"Downloading {url}")
     response = requests.get(url)
     with output.open("wb+") as f:
         f.write(response.content)
+
+
+def write_json(file: Path, payload, indent=None) -> None:
+    with file.open("w+", encoding="utf-8") as f:
+        json.dump(payload, f, indent=indent, ensure_ascii=False)

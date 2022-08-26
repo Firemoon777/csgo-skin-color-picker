@@ -13,15 +13,22 @@ app = FastAPI()
 app.mount("/res", StaticFiles(directory="res"), name="static")
 
 templates = Jinja2Templates(directory="templates")
-items = dict()
+paint_kits = dict()
+rarities = dict()
 
 
 @app.on_event("startup")
 def startup():
-    global items
-    items_file = Path("items.json")
-    with items_file.open(encoding="utf-8") as f:
-        items = json.load(f)
+    global paint_kits
+    global rarities
+
+    pk_file = Path("paint_kits.json")
+    with pk_file.open(encoding="utf-8") as f:
+        paint_kits = json.load(f)
+
+    r_file = Path("rarities.json")
+    with r_file.open(encoding="utf-8") as f:
+        rarities = json.load(f)
 
 
 def get_delta_v(palette: list, color: list):
@@ -64,20 +71,19 @@ def read_item(request: Request, color: List[str] = Query(default=[]), n: int = 3
             parsed_colors_rgb = [(0, 0, 0)]
             parsed_colors_hsv = [(0, 0, 0)]
 
-        for paintkit in items["items_game"]["paint_kits"].values():
-            if not paintkit["weapons"]:
+        for paintkit in paint_kits:
+            if not paintkit["items"]:
                 continue
 
-            for weapon, weapon_data in paintkit["weapons"].items():
-                logging.info(f"mode = {mode}")
+            for weapon, weapon_data in paintkit["items"].items():
                 if mode == "hsv":
-                    paintkit["weapons"][weapon]["delta"] = get_delta_v(
-                        paintkit["weapons"][weapon]["palette_hsv"],
+                    delta = get_delta_v(
+                        paintkit["palette_hsv"],
                         parsed_colors_hsv
                     )
                 else:
-                    paintkit["weapons"][weapon]["delta"] = get_delta_v(
-                        paintkit["weapons"][weapon]["palette_rgb"],
+                    delta = get_delta_v(
+                        paintkit["palette_rgb"],
                         parsed_colors_rgb
                     )
 
@@ -85,18 +91,18 @@ def read_item(request: Request, color: List[str] = Query(default=[]), n: int = 3
                     candidates[weapon] = list()
 
                 palette_url = f"?mode={mode}"
-                for r, g, b in paintkit["weapons"][weapon]["palette_rgb"]:
+                for r, g, b in paintkit["palette_rgb"]:
                     palette_url += f"&color={r:02x}{g:02x}{b:02x}"
-                paintkit["weapons"][weapon]["palette_url"] = palette_url
+                paintkit["palette_url"] = palette_url
 
                 candidates[weapon].append(
-                    paintkit
+                    (delta, paintkit)
                 )
 
         for weapon, pk_list in candidates.items():
-            pk_list.sort(key=lambda x: x["weapons"][weapon]["delta"])
-            candidates[weapon] = pk_list[:n]
+            pk_list.sort(key=lambda x: x[0])
+            candidates[weapon] = [x[1] for x in pk_list[:n]]
 
-    data = dict(request=request, candidates=candidates)
+    data = dict(request=request, candidates=candidates, rarities=rarities)
 
     return templates.TemplateResponse("index.html", data)

@@ -94,34 +94,34 @@
                 {% for pk in pk_list %}
                 <div class="col">
                     <div class="card shadow-sm">
-                        <img src="{{pk["weapons"][weapon]["local"]}}" class="bd-placeholder-img card-img-top"/>
+                        <img src="{{pk["items"][weapon]["local"]}}" class="bd-placeholder-img card-img-top"/>
                         <!--            <svg width="100%" height="225" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Placeholder: Thumbnail" preserveAspectRatio="xMidYMid slice" focusable="false"><title>Placeholder</title><rect width="100%" height="100%" fill="#55595c"/><text x="50%" y="50%" fill="#eceeef" dy=".3em">Thumbnail</text></svg>-->
 
                         <div class="card-body">
-                            <p class="card-text">{{pk["rarity"]}} | {{pk["description_tag_native"]}}</p>
+                            <p class="card-text" style="color: {{rarities[pk["rarity"]]["color"]}}">{{rarities[pk["rarity"]]["name"]}} | {{pk["name_native"]}}</p>
                             <div class="d-flex justify-content-between align-items-center mb-3">
                                 <div class="btn-group">
-                                    {% for r, g, b in pk["weapons"][weapon]["palette_rgb"] %}
+                                    {% for r, g, b in pk["palette_rgb"] %}
                                     <button type="button" class="btn btn-sm btn-outline-secondary" style="background-color: rgb({{r}}, {{g}}, {{b}})">&#8207;</button>
                                     {% endfor %}
                                 </div>
 <!--                                <div class="btn-group">-->
-<!--                                    {% for r, g, b in pk["weapons"][weapon]["palette_hsv"] %}-->
+<!--                                    {% for r, g, b in pk["palette_hsv"] %}-->
 <!--                                    <button type="button" class="btn btn-sm btn-outline-secondary" style="background-color: hsl({{r}} 100% 50%)">&#8207;</button>-->
 <!--                                    {% endfor %}-->
 <!--                                </div>-->
                             </div>
                             <div class="d-flex justify-content-between align-items-center">
                                 <div class="btn-group">
-                                    <a href="https://steamcommunity.com/market/search?appid=730&q={{pk["description_tag_native"]}}&category_730_Weapon%5B%5D=tag_weapon_{{weapon}}"
+                                    <a href="https://steamcommunity.com/market/search?appid=730&q={{pk["name_native"]}}&category_730_Weapon%5B%5D=tag_{{weapon}}"
                                     target=”_blank”>
                                         <button type="button" class="btn btn-sm btn-outline-secondary">Торговая площадка</button>
                                     </a>
-                                    <a href="{{pk["weapons"][weapon]["palette_url"]}}">
+                                    <a href="{{pk["palette_url"]}}">
                                         <button type="button" class="btn btn-sm btn-outline-secondary">Похожие</button>
                                     </a>
                                 </div>
-                                <small class="text-muted">{{pk["weapons"][weapon]["delta"]}}</small>
+                                <small class="text-muted">{{pk["delta"]}}</small>
                             </div>
                         </div>
                     </div>
